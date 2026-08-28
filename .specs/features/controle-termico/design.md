@@ -40,7 +40,7 @@ Tabela de tarefas agendadas por `millis()` (execução cooperativa, sem `delay()
 
 | Tarefa | Período | Deadline/Jitter |
 | --- | --- | --- |
-| Leitura DS18B20 | 1 s | ±150 ms (`NFR-TIM-001`) |
+| Leitura DS18B20 | 1,5 s | ±150 ms (`NFR-TIM-001` / D-011) |
 | Tick do buzzer | 10 ms | best-effort (ciclos 150/2000 e 300/5000 ms) |
 | `server.handleClient()` | a cada iteração | respostas ≤ 100 ms |
 | Métricas + idle | 1 s | best-effort |
@@ -109,7 +109,7 @@ Tabela de tarefas agendadas por `millis()` (execução cooperativa, sem `delay()
 ### 5.5 Componentes e comportamento
 
 - **Gauge**: arco de 180° (escala 20–90 °C), marcações a cada 10 °C, agulha com transição CSS ~200 ms; zona de risco 70–90 °C sombreada em vermelho suave; valor numérico grande em `Chakra Petch`.
-- **Gráfico de tendência**: `<canvas>` ou SVG, escala **fixa** (eixo Y 20–90 °C), grade em `--grid`, linha/área na cor `--accent`, janela de 120 pontos (D-003), sombra da zona ≥70 °C.
+- **Gráfico de tendência**: `<canvas>` ou SVG, escala **fixa** (eixo Y 20–90 °C), grade em `--grid`, linha/área na cor `--accent`, janela de 120 pontos (D-003) ≈ 3 min com amostragem de 1,5 s (D-011), sombra da zona ≥70 °C.
 - **Botão ON/OFF**: estado claro por cor (`--ok`/`--off`) + texto ("LIGADO"/"DESLIGADO"); quando intertravado (sensor ausente/risco), o botão ON fica **desabilitado visualmente** com tooltip explicando o bloqueio.
 - **Métricas**: idle %, heap livre KB, flash ocupada % — no cabeçalho, com tooltips explicando cada uma.
 - **Tooltips** (`title`/custom CSS): em todos os controles e visualizações (`FR-UI-006`).

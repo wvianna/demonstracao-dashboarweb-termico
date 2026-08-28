@@ -39,9 +39,9 @@
 | ID | Requisito |
 | --- | --- |
 | FR-SNS-001 | No **setup**, varredura OneWire (scan) obrigatória do barramento para identificar o endereço do DS18B20; **sem detecção, a carga não pode ser acionada** (estado seguro). |
-| FR-SNS-002 | Amostragem térmica a cada **1 s** com tolerância **±150 ms**, **não-bloqueante** via `millis()` no loop; **proibido** `delay()` e interrupções/timers de hardware para esta tarefa. |
+| FR-SNS-002 | Amostragem térmica a cada **1,5 s** com tolerância **±150 ms** (D-011), **não-bloqueante** via `millis()` no loop; **proibido** `delay()` e interrupções/timers de hardware para esta tarefa. |
 | FR-SNS-003 | Leitura válida atualiza a temperatura corrente exibida e usada pela segurança. |
-| FR-SNS-004 | Falha de leitura → tratamento de segurança (PWM = 0) + alerta crítico enviado ao dashboard. |
+| FR-SNS-004 | Falha de leitura **confirmada** (3 leituras consecutivas com erro — debounce D-010) → tratamento de segurança (PWM = 0) + alerta crítico enviado ao dashboard; glitch único é absorvido (mantém o último estado). |
 | FR-SNS-005 | Quando o sensor voltar a responder, o sistema **retoma as leituras automaticamente** e limpa o alerta de falha (carga permanece OFF). |
 
 ### FW-SAF — Segurança
@@ -49,7 +49,7 @@
 | ID | Requisito |
 | --- | --- |
 | FR-SAF-001 | Se temperatura **≥ 80 °C**, executa **desligamento imediato da carga (PWM = 0)**. |
-| FR-SAF-002 | Se houver **falha de comunicação** com o sensor, executa **desligamento imediato (PWM = 0)**, mesmo que o último valor lido fosse seguro. |
+| FR-SAF-002 | Se houver **falha de comunicação confirmada** com o sensor (3 leituras consecutivas com erro — debounce D-010), executa **desligamento (PWM = 0)**, mesmo que o último valor lido fosse seguro. |
 | FR-SAF-003 | Enquanto a condição de risco persistir (temp ≥ 80 °C **ou** falha de leitura), a carga permanece **bloqueada** e o comando ON é **rejeitado**. |
 | FR-SAF-004 | Após sair da condição de risco (temp < 80 °C e leitura ok), a carga **permanece OFF** até novo comando ON explícito (fail-safe). |
 
@@ -106,7 +106,8 @@
 
 | ID | Requisito |
 | --- | --- |
-| NFR-TIM-001 | Período de amostragem térmica **1 s ± 150 ms** (medido entre inícios de leituras). |
+| NFR-TIM-001 | Período de amostragem térmica **1,5 s ± 150 ms** (medido entre inícios de leituras) — D-011. |
+| NFR-TIM-004 | Falha de sensor **confirmada** após 3 leituras consecutivas com erro (~4,5 s); glitch único não aciona fail-safe (debounce D-010). |
 | NFR-TIM-002 | Reação de segurança: intervalo entre a **leitura crítica** (≥ 80 °C ou falha) e **PWM = 0** ≤ **10 ms** (mesma iteração do loop). |
 | NFR-TIM-003 | Resposta HTTP do `/json` ≤ **100 ms** em operação normal (sem falha). |
 | NFR-CONC-001 | Nenhum `delay()` bloqueante; **nenhuma ISR/timer** para amostragem/alarme; agendamento por `millis()`. |
@@ -126,8 +127,8 @@
 | CA-NET-001 | DADO placa alimentada e firmware iniciado QUANDO o AP sobe ENTÃO a rede `ESP8266_<6 hex>` aparece sem senha. |
 | CA-NET-002 | DADO AP ativo QUANDO um cliente conecta ENTÃO recebe IP `192.168.4.x` via DHCP e acessa `http://192.168.4.1`. |
 | CA-SNS-001 | DADO sensor desconectado QUANDO ocorre o boot QUANDO o scan não encontra o dispositivo ENTÃO a carga permanece desabilitada (PWM = 0) e o dashboard indica estado seguro. |
-| CA-SNS-002 | DADO sensor conectado QUANDO o sistema está em operação ENTÃO as leituras ocorrem a cada 1 s ± 150 ms, sem `delay()`/ISR (evidência: timestamps no `/json` ou serial). |
-| CA-SNS-003 | DADO leitura com falha QUANDO ocorre ENTÃO PWM = 0 imediatamente, alerta crítico aparece no dashboard e o buzzer soa em 300 ms/5 s. |
+| CA-SNS-002 | DADO sensor conectado QUANDO o sistema está em operação ENTÃO as leituras ocorrem a cada 1,5 s ± 150 ms, sem `delay()`/ISR (evidência: timestamps no `/json` ou serial). |
+| CA-SNS-003 | DADO **3 leituras consecutivas** com falha QUANDO ocorrem ENTÃO PWM = 0, alerta crítico no dashboard e buzzer soa em 300 ms/5 s; DADO 1–2 leituras com falha isolada ENTÃO o último estado é mantido (debounce). |
 | CA-SNS-004 | DADO sensor volta a responder QUANDO uma leitura válida ocorre ENTÃO o monitoramento é retomado e o alerta de falha é limpo (carga permanece OFF). |
 | CA-SAF-001 | DADO temp ≥ 80 °C QUANDO a carga está ON ENTÃO PWM = 0 em ≤ 10 ms e o buzzer soa em 150 ms/2 s. |
 | CA-SAF-002 | DADO temp ≥ 80 °C ou falha QUANDO o operador envia ON ENTÃO o comando é rejeitado, a carga permanece OFF e o dashboard indica bloqueio. |

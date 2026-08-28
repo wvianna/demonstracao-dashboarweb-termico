@@ -13,6 +13,7 @@ bool TemperatureSensor::begin() {
     // cache de devices preenchido em begin() -> para re-escancar, chame begin()
     // novamente (re-enumera o barramento). Retry limitado, somente no boot.
     delay(300); // estabiliza o barramento
+    failStreak_ = 0;
     sensors.begin();
     present_ = (sensors.getDeviceCount() > 0);
     for (int attempt = 0; !present_ && attempt < 10; attempt++) {
@@ -51,9 +52,14 @@ int TemperatureSensor::poll(uint32_t nowMs, float& tempC) {
     const float t = sensors.getTempCByIndex(0);
     if (t == DEVICE_DISCONNECTED_C) {
         requestConversion(nowMs); // tenta de novo no proximo ciclo
-        return -1;                // falha de comunicacao
+        // Debounce (D-010): so reporta falha ao FSM apos kFailThreshold leituras
+        // consecutivas com erro. Glitch unico/transiente nao desarma a carga.
+        failStreak_++;
+        if (failStreak_ >= kFailThreshold) return -1; // falha confirmada
+        return 0; // transiente: mantem o ultimo estado valido
     }
     tempC = t;
+    failStreak_ = 0;
     hasValidTemp_ = true;
     lastValidTemp_ = t;
     requestConversion(nowMs);

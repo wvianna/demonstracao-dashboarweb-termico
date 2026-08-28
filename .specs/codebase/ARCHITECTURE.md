@@ -7,7 +7,7 @@ Firmware monolítico em loop principal (sem RTOS), agendamento **não-bloqueante
 ```mermaid
 flowchart LR
     subgraph FW["Firmware ESP8266"]
-        SNS[Driver DS18B20<br/>OneWire scan + leitura 1s]
+        SNS[Driver DS18B20<br/>OneWire scan + leitura 1,5s]
         SAF[Lógica de segurança<br/>80°C / intertravamento]
         ALM[Agendador de buzzer<br/>150ms-2s | 300ms-5s]
         CTL[Controle PWM da carga<br/>ON/OFF 0-1023]
@@ -65,7 +65,7 @@ stateDiagram-v2
 | Módulo | Responsabilidade | Arquivo sugerido |
 | --- | --- | --- |
 | HAL de pinos | Constantes de pinagem/níveis | `src/hal/pins.h` |
-| Sensor | Scan OneWire + leitura 1 s não-bloqueante | `src/sensor/temperature.h/.cpp` |
+| Sensor | Scan OneWire + leitura 1,5 s não-bloqueante (debounce N=3 — D-010) | `src/sensor/temperature.h/.cpp` |
 | Segurança/controle | FSM de segurança + carga | `src/control/thermal_fsm.h/.cpp` |
 | Alarme | Agendador do buzzer (150 ms/2 s, 300 ms/5 s) | `src/alarm/buzzer.h/.cpp` |
 | Rede | AP + DHCP + IP fixo | `src/net/wifi_ap.h/.cpp` |
@@ -76,7 +76,7 @@ stateDiagram-v2
 ## Contexto de execução
 
 - **Loop principal único**: `loop()` processa as tarefas periódicas agendadas por `millis()`:
-  - Sensor: 1 s ±150 ms (sem ISR/timer — `NFR-TIM-001`).
+  - Sensor: 1,5 s ±150 ms (sem ISR/timer — `NFR-TIM-001`); falha confirmada após 3 leituras consecutivas (D-010).
   - Buzzer: tick fino (~10 ms) para os ciclos 150 ms/2 s e 300 ms/5 s.
   - Web server: `server.handleClient()` a cada iteração.
   - Métricas/idle: janela de 1 s (D-009).

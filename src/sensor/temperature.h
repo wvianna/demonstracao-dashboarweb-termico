@@ -10,9 +10,13 @@ public:
 
     // Chama a cada iteracao do loop. Retorna:
     //   1  -> leitura valida (tempC preenchido)
-    //   0  -> sem dados ainda (conversao em andamento / primeiro ciclo)
-    //  -1  -> falha de comunicacao (sensor desconectado)
+    //   0  -> sem dados ainda (conversao em andamento / primeiro ciclo / glitch
+    //         transiente absorvido pelo debounce)
+    //  -1  -> falha de comunicacao CONFIRMADA (kFailThreshold consecutivos)
     int poll(uint32_t nowMs, float& tempC);
+
+    // Numero de leituras com erro consecutivas para confirmar falha (debounce D-010)
+    static constexpr int kFailThreshold = 3;
 
     bool present() const { return present_; }
 
@@ -31,5 +35,6 @@ private:
     uint32_t lastRequestMs_ = 0;
     bool hasValidTemp_ = false;
     float lastValidTemp_ = -127.0f;
+    int failStreak_ = 0; // leituras consecutivas com erro (debounce)
     static constexpr uint32_t kConvMs = 800; // 12-bit ~750ms + margem
 };

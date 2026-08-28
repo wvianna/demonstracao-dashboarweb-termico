@@ -7,7 +7,7 @@
 #define PWM_MAX         1023 // resolucao PWM 10 bits
 #define TEMP_ALERT_C    80.0f // threshold de seguranca (FR-SAF-001)
 
-#define SAMPLE_INTERVAL_MS 1000UL // amostragem 1s (FR-SNS-002)
+#define SAMPLE_INTERVAL_MS 1500UL // amostragem 1,5s (FR-SNS-002 | D-011)
 #define SERIAL_BAUD     115200
 
 #define AP_IP_1 192
