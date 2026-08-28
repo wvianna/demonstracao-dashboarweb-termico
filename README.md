@@ -10,6 +10,43 @@ Solução de baixo custo para monitoramento e controle térmico com **ESP8266 (N
 - **Segurança**: desligamento imediato (PWM=0) se temp ≥ 80 °C ou falha do sensor; intertravamento da carga.
 - **Dashboard**: gauge + número, gráfico de tendência (escala fixa 20–90 °C), botão ON/OFF, métricas de saúde (idle/RAM/flash), tooltips, polling AJAX (`/json`).
 
+## Arquitetura
+
+```mermaid
+flowchart LR
+    subgraph HW["Hardware"]
+        DS[DS18B20<br/>D2 / GPIO4 · OneWire]
+        BZ[Buzzer<br/>D0 / IO16]
+        RK[Resistência<br/>D1 / IO5 · PWM 0-1023]
+    end
+
+    subgraph FW["Firmware ESP8266 (NodeMCU v2)"]
+        SNS[Driver DS18B20<br/>scan + amostragem 1,5 s]
+        FSM[FSM segurança/carga<br/>80 °C · intertravamento · debounce]
+        ALM[Agendador de buzzer<br/>150ms/2s · 300ms/5s]
+        CTL[Controle PWM da carga]
+        MET[Métricas<br/>idle / RAM / flash]
+        SVR[Web Server :80<br/>/ · /json · /control]
+        AP[WiFi AP aberto + DHCP<br/>ESP8266_&lt;MAC&gt; · 192.168.4.1/24]
+    end
+
+    subgraph CLI["Cliente (operador)"]
+        DASH[Dashboard web<br/>polling AJAX /json · POST /control]
+    end
+
+    DS --> SNS
+    SNS --> FSM
+    FSM --> ALM
+    FSM --> CTL
+    CTL --> RK
+    ALM --> BZ
+    SNS --> SVR
+    MET --> SVR
+    FSM --> SVR
+    SVR --> AP
+    AP <--> DASH
+```
+
 ## Especificação
 
 Este projeto segue **desenvolvimento orientado a especificações** (skill `sdd-embarcado`). A especificação vive em `.specs/`:
@@ -85,3 +122,31 @@ pio test -e native
 - **Validação física (HIL): parcial** — firmware gravado no NodeMCU (`/dev/ttyUSB0`), boot estável, AP `ESP8266_807D3A101026` ativo, sensor ausente → `SAFE_STOP` (carga bloqueada). Cenários com sensor/atuação e HTTP via AP pendentes (ver `.specs/features/controle-termico/HANDSOFF.md`).
 
 > Fonte normativa de intenção: [`docs/descricao.txt`](docs/descricao.txt). Especificação completa em `.specs/`.
+
+## Licença
+
+Distribuído sob a **Licença MIT**. Veja o arquivo [`LICENSE`](LICENSE) para os termos completos.
+
+```text
+MIT License
+
+Copyright (c) 2026 William Vianna
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
