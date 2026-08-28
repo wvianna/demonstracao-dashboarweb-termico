@@ -10,6 +10,8 @@
 | D-002 | **Buzzer em falha de sensor: 300 ms ON / 5 s OFF** (térmico segue 150 ms/2 s). | `FR-ALM-002`, `CA-SNS-003` |
 | D-003 | **Janela do gráfico de tendência: 120 pontos (~2 min).** | `FR-UI-003`, `CA-UI-003`, `NFR-MEM` |
 | D-004 | **Idioma do dashboard: pt-BR.** | `FR-UI-009` |
+| D-010 | **Debounce de falha do sensor**: só declara falha após **3 leituras consecutivas** com erro (glitch único não desarma a carga). | `FR-SNS-004`, `FR-SAF-002`, `NFR-TIM-004`, `CA-SNS-003` |
+| D-011 | **Intervalo de amostragem: 1,5 s** (era 1 s). | `FR-SNS-002`, `NFR-TIM-001`, `CA-SNS-002`, janela de tendência ≈ 3 min |
 
 ## Decisões propostas (A CONFIRMAR)
 

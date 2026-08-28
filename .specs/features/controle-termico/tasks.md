@@ -174,4 +174,4 @@
 | T-010 Métricas | BUILD | ✅ | compila; `CA-MET-001` HIL pendente |
 | T-011 Dashboard | UI mock | ✅ | navegador (fontes, estados, ON/OFF verde/vermelho) |
 | T-012 Build + orçamento | BUILD | ✅ | Flash 38,2% / RAM 36,3% (`CA-NFR-MEM-001` PASS) |
-| T-013 Validação HIL | HIL | 🔶 **PARCIAL** | gravado + boot estável + AP + `CA-SNS-001` PASS; HTTP/UP no AP não executado; demais cenários pendentes → `HANDSOFF.md` |
+| T-013 Validação HIL | HIL | 🔶 **PARCIAL** | gravado + boot + AP/DHCP/HTTP + sensor detectado + carga ON PWM 1023 (debounce) + fail-safe confirmados. Pendentes: aquecimento ≥80 °C, uptime 24 h, som do buzzer → `HANDSOFF.md` |
