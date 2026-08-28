@@ -1,0 +1,9 @@
+{
+  "name": "thermocore",
+  "version": "0.1.0",
+  "description": "Logica pura (sem Arduino) do controle termico: FSM de seguranca/carga e agendador de buzzer. Testavel em host.",
+  "keywords": ["fsm", "buzzer", "thermal", "safety"],
+  "build": {
+    "srcDir": "src"
+  }
+}
