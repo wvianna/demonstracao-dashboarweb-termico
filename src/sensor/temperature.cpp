@@ -8,13 +8,16 @@ static DallasTemperature sensors(&oneWire);
 
 bool TemperatureSensor::begin() {
     // O DS18B20 pode demorar um pouco para responder apos alimentacao/contato
-    // (diagnostico multi-pino: passada imediata perdeu, ~0.5-1s depois respondeu).
-    // Varredura one-shot com retry limitado, apenas no boot (nao no loop).
+    // (diagnostico multi-pino: a passada imediata perdeu, ~0.5s depois respondeu).
+    // IMPORTANTE: nesta versao da DallasTemperature, getDeviceCount() apenas le o
+    // cache de devices preenchido em begin() -> para re-escancar, chame begin()
+    // novamente (re-enumera o barramento). Retry limitado, somente no boot.
     delay(300); // estabiliza o barramento
     sensors.begin();
     present_ = (sensors.getDeviceCount() > 0);
     for (int attempt = 0; !present_ && attempt < 10; attempt++) {
         delay(250);
+        sensors.begin(); // re-enumera o barramento (nao usa delay() no loop)
         present_ = (sensors.getDeviceCount() > 0);
     }
     if (present_) {
@@ -23,6 +26,11 @@ bool TemperatureSensor::begin() {
         requestConversion(0);
     }
     return present_;
+}
+
+bool TemperatureSensor::getRom(uint8_t addr[8]) const {
+    if (!present_) return false;
+    return sensors.getAddress(addr, 0); // re-busca o endereco do dispositivo 0
 }
 
 void TemperatureSensor::requestConversion(uint32_t nowMs) {

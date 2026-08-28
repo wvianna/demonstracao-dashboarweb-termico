@@ -16,6 +16,9 @@ public:
 
     bool present() const { return present_; }
 
+    // ROM (endereco) do dispositivo 0, para diagnostico/log. Retorna false se ausente.
+    bool getRom(uint8_t addr[8]) const;
+
     // Telemetria para o /json (ultima leitura valida)
     bool hasValidTemp() const { return hasValidTemp_; }
     float lastValidTemp() const { return lastValidTemp_; }

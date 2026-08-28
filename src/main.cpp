@@ -31,10 +31,16 @@ void setup() {
     fsm.begin();
     buzzer.setMode(BuzzerMode::NONE);
 
-    // T-003: scan OneWire no boot (FR-SNS-001) - one-shot
+    // T-003: scan OneWire no boot (FR-SNS-001) - one-shot com retry de enumeracao
     if (sensor.begin()) {
         fsm.onSensorFound();
-        Serial.println(F("[boot] DS18B20 detectado"));
+        uint8_t rom[8];
+        if (sensor.getRom(rom)) {
+            Serial.printf("[boot] DS18B20 detectado ROM=%02X%02X%02X%02X%02X%02X%02X%02X\n",
+                          rom[0], rom[1], rom[2], rom[3], rom[4], rom[5], rom[6], rom[7]);
+        } else {
+            Serial.println(F("[boot] DS18B20 detectado"));
+        }
     } else {
         fsm.onSensorMissing();
         Serial.println(F("[boot] sensor NAO detectado - carga bloqueada"));
