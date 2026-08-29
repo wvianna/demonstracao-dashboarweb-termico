@@ -1,5 +1,6 @@
 #include "temperature.h"
 #include "hal/pins.h"
+#include <Arduino.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -55,8 +56,15 @@ int TemperatureSensor::poll(uint32_t nowMs, float& tempC) {
         // Debounce (D-010): so reporta falha ao FSM apos kFailThreshold leituras
         // consecutivas com erro. Glitch unico/transiente nao desarma a carga.
         failStreak_++;
+        // Diagnostico: raiz da falha (contato/timing) so aparece no log serial.
+        Serial.printf("[sensor] leitura falhou (streak=%d/%d) t=%lums\n",
+                      failStreak_, kFailThreshold, (unsigned long)nowMs);
         if (failStreak_ >= kFailThreshold) return -1; // falha confirmada
         return 0; // transiente: mantem o ultimo estado valido
+    }
+    if (failStreak_ > 0) {
+        Serial.printf("[sensor] leitura recuperada apos %d falha(s) t=%.1fC\n",
+                      failStreak_, t);
     }
     tempC = t;
     failStreak_ = 0;

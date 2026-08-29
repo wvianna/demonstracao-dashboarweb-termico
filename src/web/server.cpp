@@ -28,6 +28,10 @@ void ThermalServer::begin() {
     server_.on("/", HTTP_GET, [this]() { handleRoot(); });
     server_.on("/json", HTTP_GET, [this]() { handleJson(); });
     server_.on("/control", HTTP_POST, [this]() { handleControl(); });
+    // Fontes em rota propria + cache longo: mantem "/" pequena e o
+    // carregamento fluido (NFR-TIM-005) sem depender de internet.
+    server_.on("/fonts/chakra-petch-600-latin.woff2", HTTP_GET, [this]() { handleFontChakra(); });
+    server_.on("/fonts/ibm-plex-sans-400-500-latin.woff2", HTTP_GET, [this]() { handleFontPlex(); });
     server_.begin(); // porta 80 (FR-NET-005)
 }
 
@@ -37,6 +41,16 @@ void ThermalServer::handle() {
 
 void ThermalServer::handleRoot() {
     server_.send_P(200, "text/html; charset=utf-8", DASHBOARD_HTML);
+}
+
+void ThermalServer::handleFontChakra() {
+    server_.sendHeader("Cache-Control", "public, max-age=31536000, immutable");
+    server_.send_P(200, "font/woff2", (PGM_P)FONT_CHAKRA_WOFF2, FONT_CHAKRA_WOFF2_LEN);
+}
+
+void ThermalServer::handleFontPlex() {
+    server_.sendHeader("Cache-Control", "public, max-age=31536000, immutable");
+    server_.send_P(200, "font/woff2", (PGM_P)FONT_PLEX_WOFF2, FONT_PLEX_WOFF2_LEN);
 }
 
 void ThermalServer::buildJson(char* buf, size_t len) {

@@ -21,6 +21,8 @@ private:
     void handleRoot();
     void handleJson();
     void handleControl();
+    void handleFontChakra();
+    void handleFontPlex();
     void buildJson(char* buf, size_t len);
 
     ESP8266WebServer server_;

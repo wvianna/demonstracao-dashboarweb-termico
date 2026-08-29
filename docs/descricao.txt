@@ -2,20 +2,28 @@ Especificação Técnica de Projeto: Sistema de Monitoramento e Controle Térmic
 
 1. Introdução e Visão Geral do Projeto
 
-Este documento estabelece as diretrizes normativas para o desenvolvimento de uma solução de monitoramento e controle térmico de baixo custo, projetada para aplicações industriais e residenciais que exigem alta confiabilidade em hardware limitado. A consolidação rigorosa de requisitos de hardware, conectividade e segurança em um único documento técnico é estratégica para garantir que a implementação, conduzida por desenvolvedores ou modelos de IA, mantenha a integridade funcional sem desvios de arquitetura.
+Este documento estabelece as diretrizes normativas para o desenvolvimento de uma solução de monitoramento e controle térmico de baixo 
+custo, projetada para aplicações industriais e residenciais que exigem alta confiabilidade em hardware limitado. A consolidação 
+rigorosa de requisitos de hardware, conectividade e segurança em um único documento técnico é estratégica para garantir que a implementação, conduzida por desenvolvedores ou modelos de IA, mantenha a integridade funcional sem desvios de arquitetura.
 
 A precisão na especificação de sistemas embarcados reduz drasticamente os riscos de falhas de hardware, como a contenção de recursos ou danos térmicos por malfuncionamento de sensores. Ao definir protocolos claros e limites operacionais, asseguramos a interoperabilidade entre o firmware e a interface de monitoramento. O sucesso deste sistema depende estritamente da conformidade com o mapeamento físico e lógico detalhado a seguir.
 
 2. Arquitetura de Hardware e Interface de I/O
 
-A plataforma selecionada é o NodeMCU v2 (ESP8266), escolhida por sua maturidade no ecossistema de IoT e versatilidade em prototipagem rápida. Para evitar conflitos de hardware e garantir a estabilidade do sistema, o mapeamento de pinos deve seguir rigorosamente a tabela abaixo, respeitando os níveis lógicos de 3.3V nativos da placa.
+A plataforma selecionada é o NodeMCU v2 (ESP8266), escolhida por sua maturidade no ecossistema de IoT e versatilidade em prototipagem rápida. 
+Para evitar conflitos de hardware e garantir a estabilidade do sistema, o mapeamento de pinos deve seguir rigorosamente a tabela abaixo, 
+respeitando os níveis lógicos de 3.3V nativos da placa.
 
 Componente	Pino Físico	GPIO / IO	Nível Lógico	Função Técnica
 Sensor DS18B20	D2	GPIO 04	3.3V	Entrada de dados via protocolo OneWire
 Buzzer de Alarme	D0	IO 16	3.3V	Saída digital para sinalização sonora
 Resistência	D1	IO 05	3.3V	Saída PWM (0 a 1023) para controle de carga
 
-Avaliação Técnica (So What?): A utilização de Modulação por Largura de Pulso (PWM) com resolução de 10 bits (1024 passos) permite um controle granular da potência dissipada pela resistência de aquecimento. Diferente de um acionamento binário, a modulação possibilita a implementação futura de algoritmos de controle mais sofisticados, como o PID, otimizando a eficiência energética e minimizando o overshoot térmico. A separação física entre o buzzer (IO 16) e o sensor (GPIO 04) é crítica para evitar contenção de recursos nos barramentos internos do microcontrolador.
+Avaliação Técnica (So What?): A utilização de Modulação por Largura de Pulso (PWM) com resolução de 10 bits (1024 passos) 
+permite um controle granular da potência dissipada pela resistência de aquecimento. Diferente de um acionamento binário, 
+a modulação possibilita a implementação futura de algoritmos de controle mais sofisticados, como o PID, otimizando a eficiência 
+energética e minimizando o overshoot térmico. A separação física entre o buzzer (IO 16) e o sensor (GPIO 04) é crítica para evitar 
+contenção de recursos nos barramentos internos do microcontrolador.
 
 3. Infraestrutura de Rede e Conectividade Wi-Fi
 
@@ -33,9 +41,11 @@ Avaliação Técnica (So What?): A opção por uma rede aberta com IP fixo e Gat
 
 4. Lógica de Controle e Protocolos de Segurança
 
-A integridade do sistema de aquecimento depende de uma lógica de controle determinística. O firmware deve ser projetado para operar sob regime de segurança máxima, prevenindo danos físicos por falhas de leitura ou superaquecimento.
+A integridade do sistema de aquecimento depende de uma lógica de controle determinística. O firmware deve ser projetado para operar sob regime 
+de segurança máxima, prevenindo danos físicos por falhas de leitura ou superaquecimento.
 
-1. Varredura OneWire: No setup, é obrigatório realizar o scan do barramento para identificar o endereço único do DS18B20. Sem a detecção do sensor, o sistema não deve permitir o acionamento da carga.
+1. Varredura OneWire: No setup, é obrigatório realizar o scan do barramento para identificar o endereço único do DS18B20. Sem a detecção do sensor, 
+o sistema não deve permitir o acionamento da carga.
 2. Amostragem Térmica: Leitura a cada 1 segundo (tolerância de 150ms). Restrição de Arquitetura: Não é permitido o uso de interrupções de hardware ou Timers para esta tarefa. A lógica deve ser puramente não-bloqueante, baseada no loop principal (uso de millis()).
 3. Threshold de Segurança (80°C): Se a temperatura atingir ≥ 80°C ou houver falha de comunicação com o sensor, o sistema deve executar o desligamento imediato (PWM = 0) da resistência.
 4. Sinalização de Alarme: O buzzer deve operar em ciclo de 150ms (ON) e 2s (OFF) apenas enquanto a condição de risco (Temp ≥ 80°C) persistir.
