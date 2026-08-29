@@ -10,6 +10,8 @@ Solução de baixo custo para monitoramento e controle térmico com **ESP8266 (N
 - **Segurança**: desligamento imediato (PWM=0) se temp ≥ 80 °C ou falha do sensor; intertravamento da carga.
 - **Dashboard**: gauge + número, gráfico de tendência (escala fixa 20–90 °C), botão ON/OFF, métricas de saúde (idle/RAM/flash), tooltips, polling AJAX (`/json`).
 
+![Dashboard web do controle térmico](imagens/dashboard1.png)
+
 ## Arquitetura
 
 ```mermaid
