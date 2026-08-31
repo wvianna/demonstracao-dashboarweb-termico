@@ -83,7 +83,9 @@ void ThermalServer::buildJson(char* buf, size_t len) {
 }
 
 void ThermalServer::handleJson() {
-    char buf[2048]; // buffer estatico (NFR-MEM-004)
+    // Cabecalho (~250B) + 120 pontos de trend (max ~7B cada) + fechamento.
+    // 1536B cobre o pior caso com folga e reduz a pressao na stack (NFR-MEM-004).
+    char buf[1536];
     buildJson(buf, sizeof(buf));
     server_.send(200, "application/json", buf);
 }

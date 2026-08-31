@@ -62,16 +62,27 @@ void loop() {
     const uint32_t now = millis();
     const uint32_t loopStartUs = micros(); // base para medir idle (FR-MET-001)
 
-    // Agendador do buzzer (tick 10ms) - FR-ALM-001..003
+    // Agendador do buzzer (tick 10ms) - FR-ALM-001..003.
+    // Troca de modo e escrita no pino so ocorrem em transicao.
     static uint32_t lastTick = 0;
+    static BuzzerMode lastMode = BuzzerMode::NONE;
+    static bool lastBuzzerOut = false;
     if (now - lastTick >= 10) {
         lastTick = now;
-        buzzer.setMode(fsm.output().buzzer);
+        const BuzzerMode mode = fsm.output().buzzer;
+        if (mode != lastMode) {
+            buzzer.setMode(mode);
+            lastMode = mode;
+        }
         buzzer.tick(now);
-        digitalWrite(PIN_BUZZER, buzzer.output() ? HIGH : LOW);
+        const bool out = buzzer.output();
+        if (out != lastBuzzerOut) {
+            digitalWrite(PIN_BUZZER, out ? HIGH : LOW);
+            lastBuzzerOut = out;
+        }
     }
 
-    // Amostragem termica a cada 1s (FR-SNS-002) - sem delay/ISR
+    // Amostragem termica a cada 2s (FR-SNS-002) - sem delay/ISR
     static uint32_t lastSample = 0;
     if (now - lastSample >= SAMPLE_INTERVAL_MS) {
         lastSample = now;
@@ -85,13 +96,20 @@ void loop() {
         }
     }
 
-    // Aplica PWM da FSM a carga (seguranca primeiro: FR-SAF-001/002)
-    analogWrite(PIN_LOAD, fsm.output().pwm);
+    // Aplica PWM da FSM a carga (seguranca primeiro: FR-SAF-001/002).
+    // PWM por software no core ESP8266: escrever somente em transicao evita
+    // reconfigurar pinMode/waveform a cada iteracao do loop.
+    static int lastPwm = -1;
+    const int pwm = fsm.output().pwm;
+    if (pwm != lastPwm) {
+        analogWrite(PIN_LOAD, pwm);
+        lastPwm = pwm;
+    }
 
     // Web server responsivo (FR-NET-006)
     server.handle();
 
     // Metricas: idle (FR-MET-001) + RAM/flash (FR-MET-002)
     health.addBusyUs(micros() - loopStartUs);
-    health.loop(millis());
+    health.loop(now);
 }
